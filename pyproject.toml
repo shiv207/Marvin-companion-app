@@ -1,7 +1,32 @@
 [project]
 name = "marvin-companion-app"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.2.0"
+description = "Groq-native real-time voice assistant for Marvin"
 readme = "README.md"
-requires-python = ">=3.14"
-dependencies = []
+requires-python = ">=3.11"
+dependencies = [
+  "httpx>=0.28.1",
+  "numpy>=2.1.0",
+  "pydantic>=2.9.0",
+  "pydantic-settings>=2.6.0",
+  "python-dotenv>=1.0.1",
+  "sounddevice>=0.5.1",
+  "tenacity>=9.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.3",
+  "pytest-asyncio>=0.24.0",
+]
+
+[project.scripts]
+marvin-assistant = "marvin_assistant:main"
+marvin-gui = "marvin_gui:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

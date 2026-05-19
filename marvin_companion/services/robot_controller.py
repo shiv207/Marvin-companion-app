@@ -1,4 +1,4 @@
-"""Async Sesame robot controller."""
+"""Async Marvin robot controller."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from marvin_companion.core.interfaces import RobotController
 
 
 class AsyncRobotController(RobotController):
-    """HTTP client for the Sesame robot."""
+    """HTTP client for the Marvin robot integration."""
 
     def __init__(
         self,
@@ -70,4 +70,3 @@ class AsyncRobotController(RobotController):
 
     async def aclose(self) -> None:
         await self.client.aclose()
-

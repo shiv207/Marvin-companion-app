@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from marvin_companion.config.logging import configure_logging
 from marvin_companion.config.settings import AppSettings, get_settings
-from marvin_companion.core.orchestrator import VoiceOrchestrator
+from marvin_companion.core.orchestrator import MarvinOrchestrator
 from marvin_companion.services.audio_pipeline import MicrophoneAudioPipeline
 from marvin_companion.services.diagnostics import run_startup_diagnostics
 from marvin_companion.services.http_client import GroqAPIClient
@@ -24,7 +24,7 @@ class AppRuntime:
     """Runtime container for adapters."""
 
     settings: AppSettings
-    orchestrator: VoiceOrchestrator
+    orchestrator: MarvinOrchestrator
     events: WebSocketManager
     groq_client: GroqAPIClient | None = None
     robot_client: AsyncRobotController | None = None
@@ -51,7 +51,7 @@ def create_runtime(settings: AppSettings | None = None) -> AppRuntime:
         stt = MockSTTService()
         tts = MockTTSService()
         robot = MockRobotController()
-        orchestrator = VoiceOrchestrator(
+        orchestrator = MarvinOrchestrator(
             settings=settings,
             llm=llm,
             stt=stt,
@@ -69,7 +69,7 @@ def create_runtime(settings: AppSettings | None = None) -> AppRuntime:
     stt = STTService(groq_client, settings, logger=logger.getChild("stt"))
     tts = TTSService(groq_client, settings, logger=logger.getChild("tts"))
     robot_client = AsyncRobotController(settings.robot, logger=logger.getChild("robot"))
-    orchestrator = VoiceOrchestrator(
+    orchestrator = MarvinOrchestrator(
         settings=settings,
         llm=llm,
         stt=stt,

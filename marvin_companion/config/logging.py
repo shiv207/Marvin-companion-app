@@ -57,7 +57,7 @@ def configure_logging(settings: LoggingSettings) -> None:
     """Configure root logging."""
 
     handler = logging.StreamHandler()
-    if settings.json:
+    if settings.json_output:
         handler.setFormatter(JsonFormatter())
     else:
         handler.setFormatter(
@@ -70,4 +70,3 @@ def configure_logging(settings: LoggingSettings) -> None:
     root_logger.handlers.clear()
     root_logger.addHandler(handler)
     root_logger.setLevel(settings.level)
-

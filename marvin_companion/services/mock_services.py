@@ -40,7 +40,7 @@ class MockSTTService(STTProvider):
 
     async def transcribe(self, audio_path: str) -> str:
         del audio_path
-        return "Hello Sesame"
+        return "Hello Marvin"
 
 
 class MockTTSService(TTSProvider):
@@ -68,4 +68,3 @@ class MockRobotController(RobotController):
 
     async def get_status(self) -> dict:
         return {"currentCommand": "idle", "currentFace": "happy", "networkConnected": True, "mock": True}
-

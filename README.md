@@ -1,177 +1,139 @@
-# Sesame Robot Companion App
+# Marvin Assistant
 
-AI-powered natural language interface for the Sesame robot using Google Gemini and PyTTSx3.
+Groq-native real-time voice assistant built on an async runtime, with CLI and GUI adapters over the same orchestration core.
 
-## Setup
+## What Changed
 
-### Requirements
+- The assistant identity has been renamed to Marvin throughout the app surface.
+- The runtime stays modular and async, with separate services for LLM, STT, TTS, audio, robot control, and diagnostics.
+- Startup entrypoints now live in [`marvin_assistant.py`](/Users/shiv/Developer/Marvin-companion-app/marvin_assistant.py) and [`marvin_gui.py`](/Users/shiv/Developer/Marvin-companion-app/marvin_gui.py).
+- Environment variables are standardized to flat, production-ready names like `GROQ_API_KEY`.
 
-- Python 3.7+
-- Sesame robot on same network
-- Google Gemini API key from [ai.google.dev](https://aistudio.google.com/app/apikey) or self hosted LLM model
+## Layout
 
-### Installation
+```text
+marvin_companion/
+  config/
+  core/
+  services/
+  utils/
+tests/
+marvin_assistant.py
+marvin_gui.py
+```
 
-```powershell
+## Requirements
+
+- Python 3.11+
+- A Groq API key
+- A working microphone and speaker for voice mode
+- Robot mock mode enabled, or a reachable robot base URL
+
+## Installation
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Configuration
+## Configuration
 
-Option 1 - Environment variables:
+Copy [`.env.example`](/Users/shiv/Developer/Marvin-companion-app/.env.example) to `.env` and adjust values.
 
-```powershell
-$env:SESAME_LOCAL=true
-# To test without Sesame you can set SESAME_ROBOT_IP to 'mock'
-$env:SESAME_ROBOT_IP="192.168.1.100"
-$env:GEMINI_API_KEY="your_key_here"
-# Use localhost if hosted LLM is on same PC, or IP (e.g. 192.168.1.50) if on a different server
-$env:LOCAL_LLM_URL="http://localhost:11434/v1"
-$env:LOCAL_LLM_MODEL="granite4"
-```
+The settings loader accepts both the new flat keys and the older nested `__` form, but the flat form is preferred.
 
-Option 2 - `.env` file:
+Important variables:
 
-```
-SESAME_LOCAL=true
-SESAME_ROBOT_IP=192.168.1.100
-GEMINI_API_KEY=your_key_here
-VOICE_ENABLED=true
-TTS_ENGINE=pyttsx3
-WAKE_WORD=hey sesame
-WAKE_WORD_MODE=false
-# Use localhost if AI is on same PC, or IP (e.g. 192.168.1.50) if on a different server
-LOCAL_LLM_URL="http://localhost:11434/v1"
-LOCAL_LLM_MODEL="granite4"
-```
+- `MARVIN_APP_NAME`
+- `GROQ_API_KEY`
+- `GROQ_BASE_URL`
+- `GROQ_LLM_MODEL`
+- `GROQ_STT_MODEL_PRIMARY`
+- `GROQ_STT_MODEL_FALLBACK`
+- `GROQ_TTS_MODEL`
+- `GROQ_TTS_VOICE`
+- `ROBOT_BASE_URL`
+- `ROBOT_MOCK_MODE`
+- `FEATURES_VOICE_ENABLED`
+- `FEATURES_WAKE_WORD_MODE`
+- `FEATURES_WAKE_WORD`
+- `FEATURES_DEMO_MODE`
+
+Model aliases:
+
+- `GROQ_LLM_MODEL=gpt-oss-3` resolves to `openai/gpt-oss-20b`
+- `GROQ_TTS_MODEL=playai-tts` resolves to `canopylabs/orpheus-v1-english`
 
 ## Usage
 
-### CLI Mode
+CLI:
 
-```powershell
-python sesame_companion.py
+```bash
+python3 marvin_assistant.py
 ```
 
-### GUI Mode
+GUI:
 
-```powershell
-python sesame_gui.py
+```bash
+python3 marvin_gui.py
 ```
 
-## Features
+Installed entrypoints:
 
-### Commands
-
-- **Movement**: walk, dance, wave, swim, pushup, bow, shake, etc.
-- **Control**: idle, stop, rest
-- **Status**: Check robot state
-
-### Faces
-
-- **Conversational**: happy, sad, angry, excited, sleepy, love, confused, surprised
-- **Action-specific**: Auto-selected during movements
-
-### Voice Control
-
-- Speech recognition via Google Speech API
-- TTS engines: pyttsx3 (local) or Gemini (cloud)
-- Wake word support: "hey sesame" (configurable)
-- Audio-synced talking animation
-
-### AI Personality
-
-- Small robot with limited intelligence
-- Randomly sarcastic/mean responses (~90%)
-- Self-aware of being artificial (~20%)
-- Short, simple responses with comedic timing
-
-## Architecture
-
-### Components
-
-**VoiceInterface**
-
-- Speech recognition (Google Speech API)
-- TTS with pyttsx3 or Gemini
-- Audio-level based mouth animation (pyaudio)
-- Wake word detection
-
-**SesameRobotController**
-
-- HTTP API client for robot control
-- Handles face-only updates (idle command)
-- Command validation and error handling
-
-**GeminiInterface**
-
-- Natural language processing
-- Command/face extraction from user input
-- Personality and response generation
-
-**SesameCompanionApp**
-
-- Orchestrates all components
-- Interactive CLI loop
-- Command routing and execution
-
-### Face Animation System
-
-The robot has two types of faces:
-
-- **Base faces**: Emotion with mouth closed (e.g., `happy`)
-- **Talk variants**: Same emotion with mouth open (e.g., `talk_happy`)
-
-During TTS, the system switches between base and talk variants based on audio levels detected via pyaudio. Falls back to time-based animation if audio monitoring unavailable.
-
-### API Protocol
-
-**Command endpoint**: `POST /api/command`
-
-```json
-{"command": "walk"}
-{"face": "happy"}
-{"command": "wave", "face": "excited"}
+```bash
+marvin-assistant
+marvin-gui
 ```
 
-**Status endpoint**: `GET /api/status`
+## Voice Flow
 
-```json
-{
-	"currentCommand": "idle",
-	"currentFace": "happy",
-	"networkConnected": true
-}
+1. Microphone audio is captured asynchronously with silence-based segmentation.
+2. Audio is normalized, converted to mono 16 kHz, and sent to Groq Whisper.
+3. The transcript is turned into a structured Marvin directive through Groq chat completions.
+4. Robot actions are dispatched through the async robot controller.
+5. The response is synthesized by Orpheus TTS and played back through a serialized audio sink.
+
+## Example
+
+```text
+You: hello marvin
+Marvin: Hi friend!
+Action: wave
+Face: happy
 ```
 
-## Finding Robot IP
+Expressive TTS example:
 
-1. Connect robot via USB
-2. Open serial monitor at 115200 baud
-3. Look for: `Connected to network! IP: X.X.X.X`
+```text
+[cheerful] Welcome back!
+[calm] Let me help you with that.
+```
+
+## Development
+
+Run tests:
+
+```bash
+pytest
+```
+
+The tests are offline by default and use mocked transports and stub services.
+
+## Notes
+
+- Orpheus requests are chunked to stay under the Groq text limit used by the English model.
+- TTS output is cached under `.cache/audio`.
+- Structured logs include correlation IDs for request tracing.
+- Startup diagnostics validate API key presence and local audio device availability.
 
 ## Troubleshooting
 
-**pyaudio not available**
-
-- Audio-synced animation will fall back to time-based
-- Install: `pip install pyaudio`
-- Windows: May need unofficial wheel from [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio)
-
-**Robot connection failed**
-
-- Verify robot is on and connected to network
-- Check IP address is correct
-- Ensure same network/subnet
-- Test with `curl http://ROBOT_IP/api/status`
-
-**TTS not working**
-
-- pyttsx3: Check system TTS engines installed
-- Gemini TTS: Requires valid API key and `pygame` package
-
-**Wake word not detecting**
-
-- Adjust microphone input level
-- Reduce ambient noise
-- Speak clearly near microphone
+- `Missing GROQ API key`
+  - Set `GROQ_API_KEY`, or enable `FEATURES_DEMO_MODE=true`.
+- `sounddevice is required for voice mode`
+  - Install dependencies and confirm the OS audio stack is available.
+- `Robot base URL is not configured`
+  - Set `ROBOT_BASE_URL`, or enable `ROBOT_MOCK_MODE=true`.
+- `Audio playback failed`
+  - Check default output device access and sample-rate compatibility.

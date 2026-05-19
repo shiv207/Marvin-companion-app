@@ -39,7 +39,8 @@ async def run_with_retry(
         async for attempt in build_retrying(settings, retryable):
             with attempt:
                 return await func()
+    except retryable as exc:
+        raise RetryExhaustedError("Retry attempts exhausted.") from exc
     except RetryError as exc:
         raise RetryExhaustedError("Retry attempts exhausted.") from exc
     raise RetryExhaustedError("Retry attempts exhausted without execution.")
-

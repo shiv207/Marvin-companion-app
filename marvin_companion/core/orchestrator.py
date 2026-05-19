@@ -36,7 +36,7 @@ class NullEventPublisher:
         return None
 
 
-class VoiceOrchestrator:
+class MarvinOrchestrator:
     """Coordinates STT, LLM, TTS, playback, and robot control."""
 
     def __init__(
@@ -161,4 +161,3 @@ class VoiceOrchestrator:
             return AssistantDirective.model_validate(json.loads(cleaned.strip()))
         except Exception as exc:
             raise InvalidResponseError(f"Failed to parse LLM response: {raw_response}") from exc
-

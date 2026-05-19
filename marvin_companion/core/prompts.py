@@ -1,4 +1,4 @@
-"""Prompt and schema helpers for Sesame command extraction."""
+"""Prompt and schema helpers for Marvin command extraction."""
 
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ class AssistantDirective(BaseModel):
         return self
 
 
-SYSTEM_PROMPT = f"""You are Sesame, a tiny robot with a small, funny personality.
+SYSTEM_PROMPT = f"""You are Marvin, a tiny robot with a small, funny personality.
 Return ONLY valid JSON matching this schema:
 {{
   "command": "string or null",
@@ -90,4 +90,3 @@ def build_messages(user_input: str) -> list[dict]:
             "content": f"User input: {user_input}\nRespond with JSON only.",
         },
     ]
-
